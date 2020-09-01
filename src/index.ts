@@ -46,6 +46,8 @@ const toArray = (arrLike: ArrayLike<any>): any[] => {
   return Array.prototype.slice.call(arrLike);
 };
 
+const isBrowser = typeof window !== 'undefined'
+
 // in order to account for scroll, (which we're not listening for)
 // always cache the item's position relative
 // to the top and left of the grid container
@@ -159,11 +161,16 @@ export const wrapGrid = (
     const containerIsNoLongerInPage =
       bodyElement && !bodyElement.contains(container);
     if (!container || containerIsNoLongerInPage) {
-      window.removeEventListener('resize', throttledResizeListener);
+      if (isBrowser) {
+        window.removeEventListener('resize', throttledResizeListener);
+      }
     }
     recordPositions(container.children as HTMLCollectionOf<HTMLElement>);
   }, 250);
-  window.addEventListener('resize', throttledResizeListener);
+  
+  if (isBrowser) {
+    window.addEventListener('resize', throttledResizeListener);
+  }
 
   const throttledScrollListener = throttle(() => {
     recordPositions(container.children as HTMLCollectionOf<HTMLElement>);
@@ -341,8 +348,10 @@ export const wrapGrid = (
     attributeFilter: ['class'],
   });
   const unwrapGrid = () => {
-    window.removeEventListener('resize', throttledResizeListener);
-    container.removeEventListener('scroll', throttledScrollListener);
+    if (isBrowser) {
+      window.removeEventListener('resize', throttledResizeListener);
+      container.removeEventListener('scroll', throttledScrollListener);
+    }
     observer.disconnect();
   };
   const forceGridAnimation = () => mutationCallback('forceGridAnimation');
